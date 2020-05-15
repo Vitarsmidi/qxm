@@ -1,0 +1,7 @@
+*** Settings ***
+Library           Screenshot
+Library           Selenium2Library
+Library           random
+Resource          公共资源层.txt
+
+*** Keywords ***

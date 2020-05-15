@@ -1,0 +1,245 @@
+*** Settings ***
+Library           Screenshot
+Library           Selenium2Library
+Library           random
+Library           Collections
+Library           MySQLdb
+Library           DatabaseLibrary
+Library           pymysql
+Library           string
+Library           library/at.py
+Library           SSHLibrary
+
+*** Variables ***
+
+*** Keywords ***
+文本框输入
+    [Arguments]    ${text_name}    ${content}
+    input text    ${text_name}    ${content}
+
+点击按钮
+    [Arguments]    ${button}
+    click button    ${button}
+
+关闭浏览器
+    Close Browser
+
+获取标的名称
+    ${productname1}    GenProductname
+    ${productname}    Set Global Variable    ${productname1}
+    input text    productName    ${productname}
+
+获取合同编号
+    ${contractNumber}    GenPassword
+    input text    contractNumber    ${contractNumber}
+
+获取担保人合同编号
+    ${gContractNumber}    GenPassword
+    input text    gContractNumber    ${gContractNumber}
+
+获取还款方式
+    [Arguments]    ${还款方式}
+    Click Element    repayType
+    Wait Until Element Is Visible    xpath=//select[@name="repayType"]/option[@value=${还款方式}]
+    Click Element    xpath=//select[@name="repayType"]/option[@value=${还款方式}]
+
+获取转让状态
+    [Arguments]    ${转让状态}
+    Click Element    transferStatus
+    Wait Until Element Is Visible    xpath=//select[@name="transferStatus"]/option[@value=${转让状态}]
+    Click Element    xpath=//select[@name="transferStatus"]/option[@value=${转让状态}]
+
+标的名称（rfs获取）
+    ${rand}    evaluate    random.randint(10000,99999)    random
+    ${proname}    Set Variable    车贷
+    ${pname}    Set Variable    ${proname}${rand}
+    [Return]    ${pname}
+
+获取ID（自带）
+    [Arguments]    ${proname}
+    Connect To Database Using Custom Params    pymysql    database='mtbill', user='root', password='123456', host='172.17.255.228', port=3306,charset='utf8'
+    ${a}    query    select id from product where productname ="${proname}"
+    log    ${a[0][0]}
+    ${id}    Set Variable    ${a[0][0]}
+    [Return]    ${id}
+
+220获取ID
+    [Arguments]    ${proname}
+    Connect To Database Using Custom Params    pymysql    database='mtbill', user='root', password='123456', host='172.17.255.220', port=3306,charset='utf8'
+    ${a}    query    select id from product where productname ="${proname}"
+    log    ${a[0][0]}
+    ${id}    Set Variable    ${a[0][0]}
+    [Return]    ${id}
+
+查询还款时间
+    [Arguments]    ${proid}
+    Connect To Database Using Custom Params    pymysql    database='mtbill', user='root', password='123456', host='172.17.255.228', port=3306,charset='utf8'
+    log    select realrepaydate from product_repay_plan where originalProductId ="${proid}" and repaystatus=4
+    ${a}    query    select realrepaydate from product_repay_plan where originalProductId ="${proid}" and repaystatus=4
+    log    ${a}
+
+连接ssh
+    Open Connection    172.17.255.228
+    login    root    grmtjr@2016
+    write    cd /data/app/logs
+
+登录后台
+    [Arguments]    ${brower}    ${name}    ${paswd}
+    Open Browser    ${brower}    chrome
+    Maximize Browser Window
+    input text    loginId    ${name}
+    input text    password    ${paswd}
+    Click Element    xpath=//*[@id='login-box']/div/div/fieldset/div[2]/label/span
+    sleep    7s
+    Click Element    xpath=//button[@id="subButton"]
+    sleep    1s
+    goto    ${brower}
+
+打开新增散标
+    Wait Until Element Is Visible    xpath=//td[@id="grid-pager_left"]/table/tbody/tr/td[last()]
+    Click Element    xpath=//td[@id="grid-pager_left"]/table/tbody/tr/td[last()]
+
+生成随机产品名称
+    ${productname1}    GenProductname
+    [Return]    ${productname1}
+
+上传附件
+    [Arguments]    ${attachment}
+    choose file    imageRarFile    ${attachment}
+
+保存
+    Wait Until Element Is Visible    xpath=//input[@value="保存"]
+    Click Element    xpath=//input[@value="保存"]
+
+审核标的
+    [Arguments]    ${id}
+    Wait Until Element Is Visible    xpath=//button[@data-txnid=${id}]
+    Click Element    xpath=//button[@data-txnid=${id}]
+    #    根据产品名称获取ID定位审核按钮
+    Wait Until Element Is Visible    xpath=/html/body/div[3]/div/div/div[2]/button[2]
+    Click Element    xpath=/html/body/div[3]/div/div/div[2]/button[2]
+    sleep    5s
+
+登录前台
+    [Arguments]    ${brower}    ${name}    ${paswd}
+    ${id3}    Open Browser    ${brower}    chrome
+    Maximize Browser Window
+    input text    loginId    ${name}
+    input text    password    ${paswd}
+    sleep    10s
+    Click Element    xpath=//a[@class="btn"]
+    Wait Until Element Is Visible    xpath=//a[@title="会员中心"]
+    [Return]    ${id3}
+
+输入ID打开标的详情页
+    [Arguments]    ${productId}
+    goto    http://172.17.255.228:8080/product/detail/${productId}
+    Wait Until Element Is Visible    xpath=/html/body/div[6]/div[2]/span[1]/b
+
+输入投资金额和交易密码
+    [Arguments]    ${investAmount}    ${paswd}
+    input text    investAmount    ${investAmount}
+    Click Element    xpath=/html/body/div[6]/div[2]/a
+    Wait Until Element Is Visible    xpath=/html/body/div[9]/div[4]
+    Click Element    xpath=/html/body/div[9]/div[4]
+    Wait Until Element Is Visible    xpath=/html/body/div[1]/table/tbody/tr[2]/td[2]/div/table/tbody/tr[2]/td[2]/div/div/p/span[1]
+    Click Element    xpath=/html/body/div[1]/table/tbody/tr[2]/td[2]/div/table/tbody/tr[2]/td[2]/div/div/p/span[1]
+    Click Element    xpath=/html/body/div[1]/table/tbody/tr[2]/td[2]/div/table/tbody/tr[2]/td[2]/div/div/p/a[3]
+    Wait Until Element Is Visible    //*[@id="queryButton"]
+    Click Element    //*[@id="queryButton"]
+    input text    xpath=//*[@id="keyboards"]    ${paswd}
+
+获取平安验证码
+    [Arguments]    ${phone}
+    Open Browser    https://my-st1.orangebank.com.cn/corporbank/otp.jsp    ff    2nd conn
+    Switch Browser    2nd conn
+    Wait Until Element Is Visible    xpath=//*[@id="cellphone"]
+    input text    xpath=//*[@id="cellphone"]    ${phone}
+    Click Element    xpath=//*[@id="pageForm"]/input[2]
+    ${code}    get text    xpath=/html/body/table/tbody/tr[2]/td[4]
+    关闭浏览器
+    [Return]    ${code}
+
+切换浏览器输入验证码
+    [Arguments]    ${id3}    ${code}
+    Switch Browser    ${id3}
+    input text    mobilePwd    ${code}
+    Click Element    xpath=//*[@id="submitButton"]
+    Wait Until Element Is Visible    xpath=//div[@class='resultBtn' and @onclick='doReturn();']    40    error
+    Click Element    xpath=//div[@class='resultBtn' and @onclick='doReturn();']
+    sleep    3s
+
+剩余可投金额
+    ${a}    Get Text    xpath=/html/body/div[6]/div[2]/span[1]/b
+    log    ${a}
+    ${b}    evaluate    '${a}'.replace(',','')
+    [Return]    ${b}
+
+放款任务
+    Wait Until Element Is Visible    xpath=//a[@href='/task/trigger/948892e6c4ec41b094d02720ec7827379df1908c/desc/5Lqn5ZOB6Ieq5Yqo5ruh5qCH5LiO5pS-5qy-']
+    Click Element    xpath=//a[@href='/task/trigger/948892e6c4ec41b094d02720ec7827379df1908c/desc/5Lqn5ZOB6Ieq5Yqo5ruh5qCH5LiO5pS-5qy-']    #点击放款任务
+
+还款任务
+    Wait Until Element Is Visible    xpath=//a[@href='/task/trigger/18ee78fa31a6ca344470251c33434ad9a66c9198/desc/6L-Y5qy-5Yiw55So5oi36LWE6YeR6LSm5oi3']
+    Click Element    xpath=//a[@href='/task/trigger/18ee78fa31a6ca344470251c33434ad9a66c9198/desc/6L-Y5qy-5Yiw55So5oi36LWE6YeR6LSm5oi3']    #点击还款
+
+更新转让状态任务
+    Wait Until Element Is Visible    xpath=//a[@href='/task/trigger/aae5d895d761bca2cc3a485563f30049b0289bb8/desc/5oqV6LWE6L2s6K6p54q25oCB57u05oqk']
+    Click Element    xpath=//a[@href='/task/trigger/aae5d895d761bca2cc3a485563f30049b0289bb8/desc/5oqV6LWE6L2s6K6p54q25oCB57u05oqk']    #更新转让状态
+
+获取投资ID
+    [Arguments]    ${productId1}
+    ${investid}    sele_ivid    ${productId1}
+    [Return]    ${investid}
+
+发起转让
+    Wait Until Element Is Visible    xpath=//*[@id="cdProduct"]/ul/li[2]
+    Click Element    xpath=//*[@id="cdProduct"]/ul/li[2]
+    Wait Until Element Is Visible    xpath=//*[@id="transfer"]
+    Click Element    xpath=//*[@id="transfer"]
+    Wait Until Element Is Visible    xpath=/html/body/div[2]/table/tbody/tr[2]/td[2]/div/table/tbody/tr[2]/td[2]/div/iframe
+    select frame    xpath=/html/body/div[2]/table/tbody/tr[2]/td[2]/div/table/tbody/tr[2]/td[2]/div/iframe
+    input text    xpath=//*[@id="transferReward"]    0
+    Click Element    xpath=//*[@id="transferSubmitBtn"]
+    Wait Until Element Is Visible    xpath=//*[@id='transferBg']/div[1]/p[2]/a
+    Click Element    xpath=//*[@id='transferBg']/div[1]/p[2]/a
+
+取消转让
+    Wait Until Element Is Visible    xpath=//*[@id="cdProduct"]/ul/li[2]
+    Click Element    xpath=//*[@id="cdProduct"]/ul/li[2]
+    Wait Until Element Is Visible    xpath=//*[@id="transfered"]
+    Click Element    xpath=//*[@id="transfered"]
+    Wait Until Element Is Visible    xpath=/html/body/div[1]/table/tbody/tr[2]/td[2]/div/table/tbody/tr[3]/td/div/input[1]
+    Click Element    xpath=/html/body/div[1]/table/tbody/tr[2]/td[2]/div/table/tbody/tr[3]/td/div/input[1]
+
+获取免费抽奖次数
+    Click Element    xpath=//a[@title="会员中心"]
+    Wait Until Element Is Visible    xpath=//html/body/div[5]/div/div[2]/div[2]/div[1]/div[2]
+    ${a}    Get Text    xpath=//font[@class='free-chance']
+    log    ${a}
+    [Return]    ${a}
+
+输入抽奖次数抽奖
+    [Arguments]    ${a}
+    : FOR    ${b}    IN RANGE    ${a}
+    \    Wait Until Element Is Visible    xpath=/html/body/div[5]/div/div[2]/div[2]/div[1]/div[2]/
+    \    Click Element    xpath=/html/body/div[5]/div/div[2]/div[2]/div[1]/div[2]
+    \    Wait Until Element Is Visible    //div[@class='prize-result-btn']    40    error
+    \    Click Element    //div[@class='prize-result-btn']
+    \    ${a}    Get Text    xpath=//font[@class='free-chance']
+    \    log    ${b}
+
+输入手机号和密码进行注册
+    [Arguments]    ${mobile}    ${passwd}
+    Open Browser    http://172.17.255.228:8080/user/register
+    sleep    1s
+    input text    mobile    ${mobile}
+    input text    password    ${passwd}
+    input text    confirmPassword    ${passwd}
+    sleep    6s
+    Click Element    xpath=//html/body/div[4]/div/div[1]/form/label[5]/a
+    sleep    4s
+    ${sms}    sel_sms    ${mobile}
+    input text    mobileCode    ${sms}
+    Click Element    xpath=//html/body/div[4]/div/div[1]/form/div/label[2]/label
+    Click Element    xpath=//html/body/div[4]/div/div[1]/form/div/a

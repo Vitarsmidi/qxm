@@ -1,0 +1,261 @@
+*** Settings ***
+Library           Selenium2Library
+Library           AutoItLibrary
+Library           random
+Library           Collections
+Library           DatabaseLibrary
+Library           random
+Library           string
+
+*** Variables ***
+${url-mt}         http://172.17.255.228    # 平台系统地址
+${password}       123456
+${loginId}        admin
+${amount}         1200    # 借款金额
+${annualRate}     6.8    # 加息利息
+${addAnnualRate}    0.15    # 加息利息
+${idCardNo}       230802199004216862    # 借款人证件号码
+${url-pa}         https://my-st1.orangebank.com.cn/corporbank/    #存管地址
+${telPone}        13300000006    #投资人账号
+
+*** Test Cases ***
+资产-新增车贷
+    [Tags]    formal
+    登陆be系统
+    打开散表列表
+    点击车贷资产增加
+    输入产品基本信息
+    输入借款人信息
+    输入担保人信息
+    输入借款信息
+    输入担保措施与项目风险评估
+    输入还款来源及保障
+    输入借款人信用状况
+    上传资产文件存档
+
+资产-发布车贷
+    [Tags]    formal
+    登陆be系统
+    打开散表列表
+    获取车贷资产id
+    发布资产
+
+资金-投资资产
+    [Tags]    formal
+    登录bill系统
+    购买资产过程
+
+mysql
+    [Tags]    test
+    connect to database using custom params    pymysql    host='172.17.255.228',port=3306,user='root',password='123456',db='mtbill'
+    ${productId}=    query    select id from product where productName='${productName}';
+    disconnect from database
+    log    ${productId[0][0]}
+    set suite variable    ${globalId}    ${productId[0][0]}
+    log    ${globalId}
+    click element    xpath=//table[@id="grid-table"]/tbody/tr[2][@id="${globalId}"]/td[last()]/div/button[@class="btn btn-xs btn-danger"]
+
+switch browser
+    [Tags]    test
+    ${t1}    open browser    http://www.baidu.com
+    sleep    1
+    input text    kw    qq
+    click element    su
+    click link    xpath=//div[@id="content_left"]/div[@id="1"]/h3/a
+    ${t3}    select window
+    sleep    2
+    ${t2}    open browser    ${url-pa}otp.jsp    #https://my-st1.orangebank.com.cn/corporbank/otp.jsp
+    sleep    2    #等待存管确认页面
+    wait until page contains element    cellphone    5
+    input text    cellphone    ${telPone}
+    click element    submitbtn
+    ${duanxinma}=    get text    xpath=//body/table/tbody/tr[1]/td[4]    #得到短信验证码
+    switch browser    ${t1}
+    input text    kw    ${duanxinma}
+    click element    su
+    select window    ${t3}
+
+*** Keywords ***
+打开be地址
+    open browser    ${url-mt}:7080/login
+
+输入be用户名
+    input text    loginId    ${loginId}
+
+输入be密码
+    input text    password    ${password}
+
+点击be登陆
+    click button    subButton
+
+打开散表列表
+    execute javascript    xpath=addTab(\'/product/sporadic/list\',\'散标列表\')    #{url-mt}:7080/product/sporadic/list
+    Comment    go to    ${url-mt}:7080/product/sporadic/list
+    sleep    2
+    select frame    conframe
+
+登陆be系统
+    log    ${url-mt}:7080/login
+    打开be地址
+    maximize browser window
+    输入be用户名
+    输入be密码
+    sleep    5
+    点击be登陆
+
+点击车贷资产增加
+    Comment    assign id to element    xpath=//td[contains(@data-original-title,"添加车贷资产")]    id=add_car
+    Comment    execute javascript    "arguments[0].scrollIntoView(true);",add_car
+    Comment    focus    add_car
+    go to    ${url-mt}:7080/product/sporadic/list    #重新打开散标列表
+    sleep    2    #等待页面
+    click element    xpath=//td[@id="grid-pager_left"]/table/tbody/tr/td[last()]    #车贷添加地址http://172.17.255.228:7080/product/sporadic/car/add
+
+输入产品基本信息
+    ${num}=    evaluate    random.randint(000,999)    random    #随机生成3位数
+    ${year}    ${month}    ${day}=    get time    year,month,day    #获取当前年月日
+    input text    productName    LIULY${year}${month}${day}${num}    #输入资产名称
+    set suite variable    ${productName}    LIULY${year}${month}${day}${num}    #打印出生成的产品名称
+    input text    amount    ${amount}    #输入资产总额
+    input text    annualRate    ${annualRate}    #输入年利率
+    input text    addAnnualRate    ${addAnnualRate}    #输入加息
+    ${deadline}=    evaluate    random.randint(1,12)    random    #随机生成月份
+    input text    deadline    ${deadline}    #输入借款期限
+    log    ${deadline}    #打印借款期限
+    run keyword if    ${deadline}>=3    run keyword    select from list by value    transferStatus    1
+    ...    ELSE    run keyword    select from list by value    transferStatus    0    #期限大于或等3，选择可转
+    ...    #期限小于3，不可转
+    ${istransfer}=    get value    transferStatus
+    log    ${istransfer}    #打印是否转让值
+    run keyword if    ${istransfer}==1    input text    transferDeadline    1    #输入可转期限
+    ${type}=    evaluate    random.choice(['2','3'])    random    #选择随机数
+    log    ${type}    #打印还款类型随机数
+    select from list by value    repayType    ${type}    #随机选择还款类型,2先息后本,3等额本息
+    select from list by value    productArea    1    #选择指定专区,1默认,2新客
+    input text    minAmount    100    #设置最小投资金额
+    input text    maxAmount    2000    #设置最大投资金额
+    input text    increAmount    1    #输入递增金额
+    ${periodAmount}=    evaluate    str(round(${amount}/${deadline},2)+13.60)    #计算每期还款金额
+    log    ${periodAmount}    #打印每期还款金额
+    input text    repayAmountPeriod    ${periodAmount}    #输入期还款金额1
+    run keyword if    ${type}=='3'    input text    repayAmountPeriod2    ${periodAmount}    else    input text
+    ...    repayAmountPeriod2    0    #等额本息必须输入大于0    #先息后本为0
+    select from list by value    status    0    #选择状态,0初始化,2招标中
+    select from list by value    activityStatus    0    #选择是否参加活动，0否,1是
+    comment    ${activityStatus}=    get value    activityStatus
+    comment    run keyword if    ${activityStatus}=='1'    input text    activityIdentification    ActivityCHE    #输入活动标识
+    select from list by value    autoInvest    0    #选择自动投资,1可以自动投资,0不可以自动投资
+    input text    saleDeadline    3    #输入售卖期限
+
+输入借款人信息
+    input text    borrowerName    大萨达    #输入借款人
+    input text    legalPerson    快点撒都是    #输入借款企业法人
+    select from list by value    idCardType    0    #选择证件类型，0身份证,1营业执照
+    input text    idCardNo    ${idCardNo}    #输入借款人证件号码
+    ${num}=    evaluate    random.randint(000000,999999)    random    #随机生成6位数
+    ${year}    ${month}    ${day}=    get time    year,month,day    #获取当前年月日
+    input text    contractNumber    JKHTBH${year}${month}${day}${num}    #输入借款合同编号
+    input text    valuationPledge    ${amount}    #输入质押物估值
+    input text    loanAmount    ${amount}    #输入放款金额
+    input text    poundage    9.6    #输入居间手续费
+    input text    recievedInterest    11.5    #输入应收借款人利息
+    input text    receivingBank    中国邮政银行    #输入收款银行
+    input text    receivingAccount    6210985643467319252    #输入收款账号
+    input text    receivingName    借款人专用    #输入开户名称
+    input text    borrowerUse    到的萨芬撒打算发的撒是范德萨第三方的撒范德萨发大发发热    #输入借款用途
+
+输入担保人信息
+    input text    guaranteeName    河南县周龙生态有机畜牧业牧民专业合作社    #输入担保人
+    input text    guaranteeLegalPerson    担保人    #输入担保企业法人
+    select from list by value    gIdCardType    1    #选择证件类型,0身份证,1营业执照
+    input text    gIdCardNo    632324NAA00019X    #输入证件号码
+    ${num}=    evaluate    random.randint(000000,999999)    random    #随机生成6位数
+    ${year}    ${month}    ${day}=    get time    year,month,day    #获取当前年月日
+    input text    gContractNumber    DBHTBH${year}${month}${day}${num}    #输入担保合同编号
+    input text    guaranteePoundage    6    #输入担保手续费
+    input text    gReceivingBank    中国工商银行    #输入收/付款银行
+    input text    gReceivingAccount    6222021419751118358    #输入收/付款账号
+    input text    gReceivingName    担保专用    #输入开户名称
+    input text    address    武汉市江岸区财富大厦A单元4层2室    #输入地址
+
+输入借款信息
+    sleep    2    #等待
+    focus    xpath=//form[@id="productCarForm"]/div[3]/div/div[2]/span/div[2]/div[3]/div[3]
+    Comment    execute javascript    window.scrollTo(0,10000)
+    input text    xpath=//form[@id="productCarForm"]/div[3]/div/div[2]/span/div[2]/div[3]/div[3]    地洒落的佛啊大范德萨了发手机打开的撒范德萨第三方    #输入借款详细信息
+
+输入担保措施与项目风险评估
+    input text    xpath=//form[@id="productCarForm"]/div[4]/div/div[2]/div[2]/div[3]/div[3]    经风控人员审查，未发现借款人异常情况，且本项目是以车辆为担保的借款，如借款到期之后，借款人若无力偿还，担保方将会按合同处置担保物，以保障借款人的权益。    #担保措施与项目风险评估
+
+上传资产文件存档
+    sleep    1
+    choose_file    informationFile    ${CURDIR}\\biaoti.jpg    #信息认证扫描件
+    sleep    1
+    choose_file    informationNoMosaicFile    ${CURDIR}\\biaoti.jpg    #信息认证扫描件（非打码）
+    sleep    1
+    choose_file    contractFile    ${CURDIR}\\biaoti.jpg    #合同扫描件
+    sleep    1
+    choose_file    contractMosaicFile    ${CURDIR}\\biaoti.jpg    #合同扫描件（非打码）
+    sleep    1
+    choose_file    imageRarFile    ${CURDIR}\\fujian.rar    #添加影像包
+    sleep    2
+    click button    xpath=//input[@value="保存"]
+
+获取车贷资产id
+    connect to database using custom params    pymysql    host='172.17.255.228',port=3306,user='root',password='123456',db='mtbill'
+    ${productId}=    query    select id from product where productName='${productName}';
+    disconnect from database
+    log    ${productId[0][0]}
+    set suite variable    ${globalId}    ${productId[0][0]}
+    log    ${globalId}
+    sleep    2
+
+发布资产
+    input text    productName    ${productName}
+    click button    searchBtn
+    click element    xpath=//table[@id="grid-table"]/tbody/tr[2][@id="${globalId}"]/td[last()]/div/button[@class="btn btn-xs btn-danger"]
+    sleep    2
+    click element    xpath=//div/button[@class="btn btn-primary"]
+
+登录bill系统
+    ${mt}    open browser    ${url-mt}:8080/user/login    #打开资金系统
+    set suite variable    ${mtbill}    ${mt}
+    sleep    2
+    input text    loginId    ${telPone}
+    input text    password    aaa12345
+    sleep    5
+    click element    xpath=//body/div[5]/div/form/a[@class="btn"]
+    wait until element contains    xpath=//body/div[3]/div[2]/div/div[3][@class="balanceTxt"]    可用余额
+
+购买资产过程
+    Comment    ${mtbill}    execute javascript    window.open('${url-mt}:8080/product/detail/70538')    #{globalId}其他案例传参
+    go to    ${url-mt}:8080/product/detail/70538    #{globalId}其他案例传参
+    sleep    1
+    Comment    ${ableAmount}=    get text    xpath=//body/div[6]/div[2]/span[1]/b[@class="min-sy"]
+    input text    investAmount    100
+    click element    xpath=//body/div[6]/div[2]/a[@class="btn clk-lay realName-btn"]
+    click element    xpath=//tbody/tr[2]/td[2]/div/div/p/span[1][@type="checkbox"]
+    click element    xpath=//tbody/tr[2]/td[2]/div/div/p/a[3][@class="btn toclick"]
+    sleep    2    #等待存管确认页面
+    execute javascript    window.scrollTo(0,10000)
+    click button    queryButton
+    open browser    ${url-pa}otp.jsp    #https://my-st1.orangebank.com.cn/corporbank/otp.jsp    #https://my-st1.orangebank.com.cn/corporbank/otp.jsp
+    wait until page contains element    cellphone    5
+    input text    cellphone    ${telPone}
+    click element    submitbtn
+    sleep    2
+    ${duanxinma}    get text    xpath=//body/table/tbody/tr[2]/td[4]    #得到短信验证码
+    switch browser    ${mtbill}
+    input text    xpath=//li/div[2]/input[@id="mobilePwd"]    ${duanxinma}    #输入短信验证码
+    input text    keyboards    a12345678
+    click element    submitButton
+    sleep    10
+    wait until page contains element    xpath=//body/div[5]/div/h3    恭喜您投资成功    #http://172.17.255.228:8080/product/invest/result
+    go to    ${url-mt}:8080/product/listing
+    close window
+
+输入还款来源及保障
+    input text    xpath=//form[@id="productCarForm"]/div[5]/div/div[2]/div[2]/div[3]/div[3]    1、借款人收入流水可以覆盖应付本息。 2、借款人车辆抵押。 3、担保人承担无限连带责任。    #还款来源及保障
+
+输入借款人信用状况
+    input text    xpath=//form[@id="productCarForm"]/div[6]/div/div[2]/div[2]/div[3]/div[3]    1、平台信用记录： 在本平台没有超过借款余额上限。 2、在本平台逾期情况逾期数次：0次 在本平台累计逾期金额：0.00元。 3、征信状况： 在风控审核过程中，未发现借款人有信用不良的记录。 4、涉诉状况： 经查询借款人和担保人在“全国法院被执行人信息查询系统”中，无法院被执行信息，无不良信用记录。    #借款人信用状况

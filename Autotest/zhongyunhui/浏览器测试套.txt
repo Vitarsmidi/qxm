@@ -1,0 +1,778 @@
+*** Settings ***
+Library           Selenium2Library
+Library           Collections
+Library           DatabaseLibrary
+Library           random
+Library           C:/Users/mtjf/Desktop/python/python/aoto.py
+Library           pymysql
+Library           C:/Users/mtjf/Desktop/python/python/sfznumber.py
+Library           SSHLibrary
+Library           SendKeys
+
+*** Variables ***
+${发标金额}           3000    # 发标金额
+${普通利率}           7    # 普通利率
+${加息利率}           0.5
+${期限-月}           3
+${售卖期限}           10
+${借款人}            金磊
+${借款人身份证}         411025198803053212
+${担保人/公司}         杨静
+${担保企业法人}         王静
+${担保人证件号码}        632324NAa00019X
+${可转期限}           1    # 可转期限建议只能为整数
+${活动标识}           测试
+${银票-借款企业}        民投金服
+${银票-企业营业执照}      9163270009162273AC
+${银票担保人}          河南县周龙生态有机畜牧业牧民专业合作社
+${银票担保人营业执照}      632324NAa00019X
+${host_ip}        172.17.255.220
+${password}       grmtjr@2016
+${真实手机号}          15768142030
+${227_host_ip}    172.17.255.227
+${需要充值账户手机号}      15768142030
+${充值金额}           10000
+${平安交易密码}         AAA12345
+${228交易密码}        123456aaa
+${现金券金额}          70
+${优惠券期限}          30
+${使用条件-投资金额}      5000
+${使用条件-投资期限}      30
+${加息券点数}          2.88
+${发放优惠券手机号}       15768142030
+
+*** Test Cases ***
+A-1-228BE_ 发标_车贷（新手标）
+    [Setup]    228BE登陆
+    Maximize Browser Window
+    input text    id=loginId    admin
+    input text    id=password    123456
+    click Element    xpath=//*[@id="login-box"]/div/div/fieldset/div[2]/label/span
+    sleep    8s
+    Click Button    id=subButton
+    sleep    2s
+    ${b}    Get Title
+    log    ${b}
+    click Element    xpath=//*[@id="menuUL"]/li[1]/a/span
+    sleep    2s
+    goto    http://172.17.255.228:7080/product/sporadic/car/add
+    ${a}    GenPassword
+    input text    id=productName    ${a}
+    input text    id=amount    ${发标金额}
+    input text    id=annualRate    ${普通利率}
+    input text    id=addAnnualRate    ${加息利率}
+    input text    id=deadline    ${期限-月}
+    #选择新手标
+    press key    xpath=//*[@id="productArea"]    \ue015    #模拟向下按键，选择新手车贷标
+    input text    id=saleDeadline    ${售卖期限}
+    input text    id=borrowerName    ${借款人}
+    input text    id=idCardNo    ${借款人身份证}
+    ${b}    gethetong
+    input text    id=contractNumber    ${b}
+    input text    id=loanAmount    ${发标金额}
+    input text    id=borrowerUse    资金临时周转
+    input text    id=guaranteeName    ${担保人/公司}
+    input text    id=guaranteeLegalPerson    ${担保企业法人}
+    input text    id=gIdCardNo    ${担保人证件号码}
+    ${c}    gethetong
+    input text    id=gContractNumber    ${c}
+    input text    id=guaranteePoundage    25
+    input text    id=gReceivingBank    招商银行
+    input text    id=gReceivingAccount    6214876554995620
+    input text    id=gReceivingName    民投金服
+    input text    xpath=//*[@id="productCarForm"]/div[3]/div/div[2]/span/div[2]/div[3]/div[2]    公司经营临时借款周转
+    choose file    xpath=//*[@id="imageRarFile"]    C:\\Users\\mtjf\\Desktop\\Bug截图\\A5.rar
+    click element    xpath=//*[@id="productCarForm"]/div[5]/div/div[6]/div[2]/input
+    #点击审核发布标的
+    goto    http://172.17.255.228:7080/product/sporadic/list
+    Connect To Database Using Custom Params    pymysql    database='mtbill',user='root',password='123456',host='172.17.255.228',port=3306,charset='utf8'
+    ${result}    query    SELECT id from product WHERE productName="${a}"
+    ${res}    Set Variable    ${result[0][0]}
+    click element    xpath=//*[@id="${res}"]/td[17]/div/button
+    Set Suite Variable    ${产品ID}    ${res}
+    sleep    2s
+    click element    xpath=/html/body/div[3]/div/div/div[2]/button[2]
+    close all browsers
+
+A-2-228BE_ 发标_车贷先息后本
+    [Setup]    228BE登陆
+    Maximize Browser Window
+    sleep    1s
+    ${a}    Get Title
+    log    ${a}
+    input text    id=loginId    admin
+    input text    id=password    123456
+    click Element    xpath=//*[@id="login-box"]/div/div/fieldset/div[2]/label/span
+    sleep    8s
+    Click Button    id=subButton
+    sleep    2s
+    ${b}    Get Title
+    log    ${b}
+    click Element    xpath=//*[@id="menuUL"]/li[1]/a/span
+    sleep    2s
+    goto    http://172.17.255.228:7080/product/sporadic/car/add
+    ${a}    GenPassword
+    input text    id=productName    ${a}
+    input text    id=amount    ${发标金额}
+    input text    id=annualRate    ${普通利率}
+    input text    id=addAnnualRate    ${加息利率}
+    input text    id=deadline    ${期限-月}
+    input text    id=saleDeadline    ${售卖期限}
+    input text    id=borrowerName    ${借款人}
+    input text    id=idCardNo    ${借款人身份证}
+    ${b}    gethetong
+    input text    id=contractNumber    ${b}
+    input text    id=loanAmount    ${发标金额}
+    input text    id=borrowerUse    资金临时周转
+    input text    id=guaranteeName    ${担保人/公司}
+    input text    id=guaranteeLegalPerson    ${担保企业法人}
+    input text    id=gIdCardNo    ${担保人证件号码}
+    ${c}    gethetong
+    input text    id=gContractNumber    ${c}
+    input text    id=guaranteePoundage    25
+    input text    id=gReceivingBank    招商银行
+    input text    id=gReceivingAccount    6214876554995620
+    input text    id=gReceivingName    民投金服
+    input text    xpath=//*[@id="productCarForm"]/div[3]/div/div[2]/span/div[2]/div[3]/div[2]    公司经营临时借款周转
+    choose file    xpath=//*[@id="imageRarFile"]    C:\\Users\\mtjf\\Desktop\\Bug截图\\A5.rar
+    click element    xpath=//*[@id="productCarForm"]/div[5]/div/div[6]/div[2]/input
+    #点击审核发布标的
+    goto    http://172.17.255.228:7080/product/sporadic/list
+    Connect To Database Using Custom Params    pymysql    database='mtbill',user='root',password='123456',host='172.17.255.228',port=3306,charset='utf8'
+    ${result}    query    SELECT id from product WHERE productName="${a}"
+    ${res}    Set Variable    ${result[0][0]}
+    click element    xpath=//*[@id="${res}"]/td[17]/div/button
+    Set Suite Variable    ${产品ID}    ${res}
+    sleep    2s
+    click element    xpath=/html/body/div[3]/div/div/div[2]/button[2]
+    close all browsers
+
+A-3-228BE_ 发标_车贷等额本息（可转让）
+    [Setup]    228BE登陆
+    Maximize Browser Window
+    sleep    1s
+    ${a}    Get Title
+    log    ${a}
+    input text    id=loginId    admin
+    input text    id=password    123456
+    click Element    xpath=//*[@id="login-box"]/div/div/fieldset/div[2]/label/span
+    sleep    8s
+    Click Button    id=subButton
+    sleep    2s
+    ${b}    Get Title
+    log    ${b}
+    click Element    xpath=//*[@id="menuUL"]/li[1]/a/span
+    sleep    2s
+    goto    http://172.17.255.228:7080/product/sporadic/car/add
+    ${a}    GenPassword
+    input text    id=productName    ${a}
+    input text    id=amount    ${发标金额}
+    input text    id=annualRate    ${普通利率}
+    input text    id=addAnnualRate    ${加息利率}
+    input text    id=deadline    ${期限-月}
+    #下拉栏选择等额本息
+    press key    xpath=//*[@id="productCarForm"]/div[1]/div[1]/div/div[7]/div[2]/span/select    \ue015    #向下按键选择等额本息
+    press key    xpath=//*[@id="transferStatus"]    \ue015    #向下按键选择可转让
+    sleep    1s
+    input text    id=transferDeadline    ${可转期限}    #可转让期限填1个月
+    input text    id=saleDeadline    ${售卖期限}
+    input text    id=borrowerName    ${借款人}
+    input text    id=idCardNo    ${借款人身份证}
+    ${b}    gethetong
+    input text    id=contractNumber    ${b}
+    input text    id=loanAmount    ${发标金额}
+    input text    id=borrowerUse    资金临时周转
+    input text    id=guaranteeName    ${担保人/公司}
+    input text    id=guaranteeLegalPerson    ${担保企业法人}
+    input text    id=gIdCardNo    ${担保人证件号码}
+    ${c}    gethetong
+    input text    id=gContractNumber    ${c}
+    input text    id=guaranteePoundage    25
+    input text    id=gReceivingBank    招商银行
+    input text    id=gReceivingAccount    6214876554995620
+    input text    id=gReceivingName    民投金服
+    input text    xpath=//*[@id="productCarForm"]/div[3]/div/div[2]/span/div[2]/div[3]/div[2]    公司经营临时借款周转
+    choose file    xpath=//*[@id="imageRarFile"]    C:\\Users\\mtjf\\Desktop\\Bug截图\\A5.rar
+    click element    xpath=//*[@id="productCarForm"]/div[5]/div/div[6]/div[2]/input
+    #点击审核发布标的
+    goto    http://172.17.255.228:7080/product/sporadic/list
+    Connect To Database Using Custom Params    pymysql    database='mtbill',user='root',password='123456',host='172.17.255.228',port=3306,charset='utf8'
+    ${result}    query    SELECT id from product WHERE productName="${a}"
+    ${res}    Set Variable    ${result[0][0]}
+    click element    xpath=//*[@id="${res}"]/td[17]/div/button
+    Set Suite Variable    ${产品ID}    ${res}
+    sleep    2s
+    click element    xpath=/html/body/div[3]/div/div/div[2]/button[2]
+    close all browsers
+
+A-4-228BE_ 发标_银票散标
+    [Setup]    228BE登陆
+    Maximize Browser Window
+    sleep    1s
+    ${a}    Get Title
+    log    ${a}
+    input text    id=loginId    admin
+    input text    id=password    123456
+    click Element    xpath=//*[@id="login-box"]/div/div/fieldset/div[2]/label/span
+    sleep    8s
+    Click Button    id=subButton
+    sleep    2s
+    ${b}    Get Title
+    log    ${b}
+    click Element    xpath=//*[@id="menuUL"]/li[1]/a/span
+    sleep    2s
+    goto    http://172.17.255.228:7080/product/sporadic/add
+    ${a}    creat_number
+    input text    id=productName    ${a}
+    input text    id=amount    ${发标金额}
+    input text    id=annualRate    ${普通利率}
+    input text    id=addAnnualRate    ${加息利率}
+    ${b}    qixian
+    input text    id=deadline    ${b}
+    ${piaoju_num}    pjnum
+    input text    id=form-field-1    ${piaoju_num}
+    press key    xpath=//*[@id="activityStatus"]    \ue015    #选择参与活动
+    input text    id=activityIdentification    ${活动标识}
+    #借款企业
+    input text    id=borrowerName    ${银票-借款企业}
+    input text    id=licenseNo    ${银票-企业营业执照}
+    ${b}    gethetong
+    input text    id=contractNumber    ${b}
+    input text    id=loanAmount    ${发标金额}
+    input text    id=borrowingStatus    资金临时周转
+    input text    id=industry    互联网金融
+    input text    id=guaranteeName    ${银票担保人}
+    input text    id=guaranteeLegalPerson    杨静
+    input text    id=gIdCardNo    ${银票担保人营业执照}
+    ${c}    gethetong
+    input text    id=gContractNumber    ${c}
+    input text    id=guaranteePoundage    25
+    input text    id=gReceivingBank    招商银行
+    input text    id=gReceivingAccount    6214876554995620
+    input text    id=gReceivingName    民投金服
+    choose file    xpath=//*[@id="imageRarFile"]    C:\\Users\\mtjf\\Desktop\\Bug截图\\A5.rar
+    click element    xpath=//*[@id="productAddForm"]/div[8]/div/div[6]/div[2]/input    #点击保存银票散标按钮
+    #点击审核发布标的
+    goto    http://172.17.255.228:7080/product/sporadic/list
+    Connect To Database Using Custom Params    pymysql    database='mtbill',user='root',password='123456',host='172.17.255.228',port=3306,charset='utf8'
+    ${result}    query    SELECT id from product WHERE productName="${a}"
+    ${res}    Set Variable    ${result[0][0]}
+    Wait Until Element Is Visible    xpath=//*[@id="${res}"]/td[17]/div/button
+    click element    xpath=//*[@id="${res}"]/td[17]/div/button
+    Set Suite Variable    ${产品ID}    ${res}
+    sleep    2s
+    click element    xpath=/html/body/div[3]/div/div/div[2]/button[2]
+    close all browsers
+
+A-5-228BE_ 发标_银票散标（新手）
+    [Setup]    228BE登陆
+    Maximize Browser Window
+    sleep    1s
+    ${a}    Get Title
+    log    ${a}
+    input text    id=loginId    admin
+    input text    id=password    123456
+    click Element    xpath=//*[@id="login-box"]/div/div/fieldset/div[2]/label/span
+    sleep    8s
+    Click Button    id=subButton
+    sleep    2s
+    ${b}    Get Title
+    log    ${b}
+    click Element    xpath=//*[@id="menuUL"]/li[1]/a/span
+    sleep    2s
+    goto    http://172.17.255.228:7080/product/sporadic/add
+    ${a}    creat_number
+    input text    id=productName    ${a}
+    input text    id=amount    ${发标金额}
+    input text    id=annualRate    ${普通利率}
+    input text    id=addAnnualRate    ${加息利率}
+    ${b}    qixian
+    input text    id=deadline    ${b}
+    press key    xpath=//*[@id="productArea"]    \ue015    #模拟键盘向下键，选择新手
+    ${piaoju_num}    pjnum
+    input text    id=form-field-1    ${piaoju_num}
+    press key    xpath=//*[@id="activityStatus"]    \ue015    ##模拟键盘向下键，选择参与活动
+    input text    id=activityIdentification    ${活动标识}
+    #借款企业
+    input text    id=borrowerName    ${银票-借款企业}
+    input text    id=licenseNo    ${银票-企业营业执照}
+    ${b}    gethetong
+    input text    id=contractNumber    ${b}
+    input text    id=loanAmount    1000
+    input text    id=borrowingStatus    资金临时周转
+    input text    id=industry    互联网金融
+    input text    id=guaranteeName    ${银票担保人}
+    input text    id=guaranteeLegalPerson    杨静
+    input text    id=gIdCardNo    ${银票担保人营业执照}
+    ${c}    gethetong
+    input text    id=gContractNumber    ${c}
+    input text    id=guaranteePoundage    25
+    input text    id=gReceivingBank    招商银行
+    input text    id=gReceivingAccount    6214876554995620
+    input text    id=gReceivingName    民投金服
+    choose file    xpath=//*[@id="imageRarFile"]    C:\\Users\\mtjf\\Desktop\\Bug截图\\A5.rar
+    click element    xpath=//*[@id="productAddForm"]/div[8]/div/div[6]/div[2]/input    #点击保存银票散标按钮
+    #点击审核发布标的
+    goto    http://172.17.255.228:7080/product/sporadic/list
+    Connect To Database Using Custom Params    pymysql    database='mtbill',user='root',password='123456',host='172.17.255.228',port=3306,charset='utf8'
+    ${result}    query    SELECT id from product WHERE productName="${a}"
+    ${res}    Set Variable    ${result[0][0]}
+    click element    xpath=//*[@id="${res}"]/td[17]/div/button
+    Set Suite Variable    ${产品ID}    ${res}
+    sleep    2s
+    click element    xpath=/html/body/div[3]/div/div/div[2]/button[2]
+    close all browsers
+
+A-6-228-登录投资
+    open browser    http://172.17.255.228:8080/user/login    chrome
+    Maximize Browser Window
+    input text    name=loginId    ${手机号}
+    input text    name=password    aaa12345
+    sleep    6s
+    click Element    xpath=//*[@id="js_login"]/div/form/a
+    sleep    1s
+    go to    http://172.17.255.228:8080/product/detail/${产品ID}
+    input text    xpath=//*[@id="form"]/div/input    1000
+    click element    xpath=/html/body/div[6]/div[2]/a
+    #click element    xpath=/html/body/div[1]/table/tbody/tr[2]/td[2]/div/table/tbody/tr[2]/td[2]/div/div/p/span[1]
+    #选择优惠券
+    #click element    xpath=/html/body/div[1]/table/tbody/tr[2]/td[2]/div/table/tbody/tr[2]/td[2]/div/div/div[4]/dl/dt/span    #点击出来下拉框
+    #sleep    1s    #sleep1s
+    #click element    xpath=/html/body/div[1]/table/tbody/tr[2]/td[2]/div/table/tbody/tr[2]/td[2]/div/div/div[4]/dl/dd/span[3]    #选择下拉框里的选项
+    #点击同意
+    click element    xpath=/html/body/div[1]/table/tbody/tr[2]/td[2]/div/table/tbody/tr[2]/td[2]/div/div/p/span[1]    #同意
+    click element    xpath=/html/body/div[1]/table/tbody/tr[2]/td[2]/div/table/tbody/tr[2]/td[2]/div/div/p/a[3]    #马上投资
+    Wait Until Page Contains Element    xpath=//*[@id="keyboards"]
+    input text    xpath=//*[@id="keyboards"]    ${228交易密码}
+    click element    xpath=//*[@id="queryButton"]    #点击获取验证码
+    Execute JavaScript    window.open('https://my-st1.orangebank.com.cn/corporbank/otp.jsp')
+    ${titles}    get window titles
+    ${title2}    get from list    ${titles}    1
+    ${title1}    get from list    ${titles}    0
+    select window    title=${title2}
+    Wait Until Page Contains Element    xpath=//*[@id="cellphone"]    #等待元素出现
+    input text    xpath=//*[@id="cellphone"]    ${真实手机号}
+    click element    xpath=//*[@id="pageForm"]/input[2]    #查询
+    ${sms_code}    get text    xpath=/html/body/table/tbody/tr[2]/td[4]
+    select window    title=${title1}
+    Wait Until Element Is Visible    xpath=//*[@id="mobilePwd"]
+    input text    xpath=//*[@id="mobilePwd"]    ${sms_code}    #输入验证码
+    click element    xpath=//*[@id="submitButton"]    #确认
+    Close All Browsers
+
+C-1-228BE_ 增加现金券
+    [Setup]    228BE登陆
+    Maximize Browser Window
+    input text    id=loginId    admin
+    input text    id=password    123456
+    click Element    xpath=//*[@id="login-box"]/div/div/fieldset/div[2]/label/span
+    sleep    8s    #手动输入验证码
+    Click Button    id=subButton
+    sleep    1s
+    go to    http://172.17.255.228:7080/coupon/config/list
+    click element    xpath=//*[@id="addBtn"]    #新增
+    Wait Until Page Contains Element    xpath=//*[@id="name"]
+    input text    xpath=//*[@id="name"]    ${现金券金额}元现金券
+    input text    xpath=//*[@id="amount"]    ${现金券金额}
+    input text    xpath=//*[@id="validPeriod"]    ${优惠券期限}
+    input text    xpath=//*[@id="conditionAmount"]    ${使用条件-投资金额}
+    input text    xpath=//*[@id="conditionDays"]    ${使用条件-投资期限}
+    click element    xpath=//*[@id="event"]/option[6]
+    ${起始时间}    now_Time
+    input text    xpath=//*[@id="startDate"]    ${起始时间}
+    ${截止时间}    oneMonthlater
+    input text    xpath=//*[@id="endDate"]    ${截止时间}
+    click element    xpath=//*[@id="subButton"]    #提交
+    Close All Browsers
+
+C-2-228BE_ 增加加息券
+    [Setup]    228BE登陆
+    Maximize Browser Window
+    input text    id=loginId    admin
+    input text    id=password    123456
+    click Element    xpath=//*[@id="login-box"]/div/div/fieldset/div[2]/label/span
+    sleep    8s    #手动输入验证码
+    Click Button    id=subButton
+    sleep    1s
+    go to    http://172.17.255.228:7080/coupon/config/list
+    click element    xpath=//*[@id="addBtn"]    #新增
+    Wait Until Page Contains Element    xpath=//*[@id="name"]
+    input text    xpath=//*[@id="name"]    ${加息券点数}%加息券
+    #优惠券类型-加息券
+    Select From List By Value    xpath=//*[@id="types"]    2    #value=2是加息券
+    input text    xpath=//*[@id="amount"]    ${加息券点数}
+    input text    xpath=//*[@id="validPeriod"]    ${优惠券期限}
+    input text    xpath=//*[@id="conditionAmount"]    ${使用条件-投资金额}
+    input text    xpath=//*[@id="conditionDays"]    ${使用条件-投资期限}
+    click element    xpath=//*[@id="event"]/option[6]
+    ${起始时间}    now_Time
+    input text    xpath=//*[@id="startDate"]    ${起始时间}
+    ${截止时间}    oneMonthlater
+    input text    xpath=//*[@id="endDate"]    ${截止时间}
+    click element    xpath=//*[@id="subButton"]    #提交
+    Close All Browsers
+
+C-3-228BE_ 发放优惠券
+    [Setup]    228BE登陆
+    Maximize Browser Window
+    input text    id=loginId    admin
+    input text    id=password    123456
+    click Element    xpath=//*[@id="login-box"]/div/div/fieldset/div[2]/label/span
+    sleep    8s    #手动输入验证码
+    Click Button    id=subButton
+    sleep    1s
+    go to    http://172.17.255.228:7080/coupon/record/list
+    click element    xpath=//*[@id="addBtn"]
+    Wait Until Page Contains Element    xpath=//*[@id="couponId"]
+    Connect To Database Using Custom Params    pymysql    database='mtbill',user='root',password='123456',host='172.17.255.228',port=3306,charset='utf8'
+    #${a}    query    SELECT id FROM coupon_config WHERE `name`="${现金券金额}元现金券" ORDER BY createTime DESC LIMIT 1;    #选择发放现金券
+    ${a}    query    SELECT id FROM coupon_config WHERE `name`="${加息券点数}%加息券" ORDER BY createTime DESC LIMIT 1;    #选择发放加息券
+    ${优惠券ID}    Evaluate    str(${a}[0][0])
+    Select From List By Value    xpath=//*[@id="couponId"]    ${优惠券ID}
+    input text    xpath=//*[@id="mobile"]    ${发放优惠券手机号}
+    click element    xpath=//*[@id="subButton"]
+    sleep    1s
+    sendkeys    {ENTER}
+    Wait Until Page Contains Element    xpath=//*[@id="searchBtn"]
+    click element    xpath=//*[@id="searchBtn"]
+    click element    xpath=//*[@id="cb_grid-table"]
+    click element    xpath=//*[@id="sendBatchBtn"]    #点击批量发送
+    sleep    1s
+    sendkeys    {ENTER}    #确定发送
+    sendkeys    {ENTER}    #发送成功确定
+    Close All Browsers
+
+N-1-228注册账号和开通平安存管
+    open browser    http://172.17.255.228:8080/user/register    chrome
+    Maximize Browser Window
+    ${phonenum}    Create Phone
+    Set Suite Variable    ${手机号}    ${phonenum}
+    input text    xpath=/html/body/div[4]/div/div[1]/form/label[1]/input[2]    ${phonenum}
+    input text    xpath=/html/body/div[4]/div/div[1]/form/label[2]/input[2]    aaa12345
+    input text    xpath=/html/body/div[4]/div/div[1]/form/label[3]/input    aaa12345
+    sleep    6s
+    # 点击获取验证码
+    click element    xpath=/html/body/div[4]/div/div[1]/form/label[5]/a
+    sleep    1s
+    Connect To Database Using Custom Params    pymysql    database='mtbill',user='root',password='123456',host='172.17.255.228',port=3306,charset='utf8'
+    ${a}    query    SELECT smsParam from sms_record WHERE receiveMobiles=${phonenum} AND smsType=11 ORDER BY createTime DESC;
+    ${b}    Set Variable    ${a[0][0]}
+    ${c}    Evaluate    ${b}['code']
+    input text    xpath=/html/body/div[4]/div/div[1]/form/label[5]/input    ${c}
+    click element    xpath=/html/body/div[4]/div/div[1]/form/div/label[2]/label
+    click element    xpath=/html/body/div[4]/div/div[1]/form/div/a
+    sleep    2s
+    #开通存管
+    go to    http://172.17.255.228:8080/custody/account
+    input text    xpath=//*[@id="js_bind_card"]/div[3]/div[1]/input    李丽书
+    ${sfznum}    makeNew
+    input text    xpath=//*[@id="js_bind_card"]/div[3]/div[2]/input    ${sfznum}
+    click element    xpath=//*[@id="js_sub_btn"]
+    sleep    1s
+    ${cardNum}    CardNum Generator
+    input text    xpath=//*[@id="accountNo"]    ${cardNum}
+    #手动输入图形验证码
+    sleep    6s    #手动输入图形验证码
+    input text    xpath=//*[@id="keyboards"]    ${平安交易密码}
+    input text    xpath=//*[@id="keyboards2"]    ${平安交易密码}
+    click element    xpath=//*[@id="queryButton"]
+    Execute JavaScript    window.open('https://my-st1.orangebank.com.cn/corporbank/otp.jsp')
+    ${titles}    get window titles
+    ${title2}    get from list    ${titles}    1
+    ${title1}    get from list    ${titles}    0
+    select window    title=${title2}
+    input text    xpath=//*[@id="cellphone"]    ${手机号}
+    click element    xpath=//*[@id="pageForm"]/input[2]
+    ${sms_code}    get text    xpath=/html/body/table/tbody/tr[2]/td[4]
+    select window    title=${title1}
+    input text    xpath=//*[@id="mobilePwd"]    ${sms_code}
+    click element    xpath=//*[@id="isRead"]
+    click element    xpath=//*[@id="SubmitButton"]
+    Wait Until Page Contains Element    xpath=//*[@id="js_bind_card"]/div[2]/p
+    Close All Browsers
+    #登录H5页面
+    #open browser    http://228wx.test.com/#/user/login?redirect=%2Fmy    chrome
+    #Execute JavaScript    window.open('http://228wx.test.com/#/user/login?redirect=%2Fmy')
+    #go to    http://228wx.test.com/#/user/login?redirect=%2Fmy
+    #${titles}    get window titles
+    #${title2}    get from list    ${titles}    1
+    #${title1}    get from list    ${titles}    0
+    #select window    title=${title2}
+    #input text    xpath=/html/body/div/div[2]/div/div/div[1]/div/input    ${phonenum}    #输入注册时候的手机号
+    #input text    xpath=/html/body/div/div[2]/div/div/div[2]/div/div/input    aaa12345
+    #click element    xpath=/html/body/div/div[2]/div/div/button/div/div
+
+N-2-228给账户充值金额
+    [Setup]    228BE登陆
+    Maximize Browser Window
+    input text    id=loginId    admin
+    input text    id=password    123456
+    click Element    xpath=//*[@id="login-box"]/div/div/fieldset/div[2]/label/span
+    sleep    8s    #手动输验证码
+    Click Button    id=subButton
+    sleep    1s
+    #go to    http://172.17.255.228:7080/custody/add/money/${需要充值账户手机号}/${充值金额}
+    go to    http://172.17.255.228:7080/custody/add/money/${手机号}/${充值金额}    #全局变量的${手机号}
+    #send    ENTER
+    Wait Until Page Contains Element    xpath=/html/body/pre    #充值响应时间
+    Close All Browsers
+
+N-3-新用户风测and开启授权
+    open browser    http://172.17.255.228:8080/user/login    chrome
+    Maximize Browser Window
+    input text    name=loginId    ${手机号}
+    input text    name=password    aaa12345
+    sleep    6s
+    click Element    xpath=//*[@id="js_login"]/div/form/a
+    sleep    1s
+    go to    http://172.17.255.228:8080/assess/pc/index
+    click element    xpath=/html/body/div[6]/div/dl[1]/dd/div[1]/i
+    click element    xpath=/html/body/div[6]/div/dl[2]/dd/div[3]/i
+    click element    xpath=/html/body/div[6]/div/dl[3]/dd/div[2]/i
+    click element    xpath=/html/body/div[6]/div/dl[4]/dd/div[1]/i
+    click element    xpath=/html/body/div[6]/div/dl[5]/dd/div[1]/i
+    click element    xpath=/html/body/div[6]/div/dl[6]/dd/div[3]/i
+    click element    xpath=/html/body/div[6]/div/dl[7]/dd/div[3]/i
+    click element    xpath=/html/body/div[6]/div/dl[8]/dd/div[4]/i
+    click element    xpath=/html/body/div[6]/div/dl[9]/dd/div[3]/i
+    click element    xpath=/html/body/div[6]/div/dl[10]/dd/div[4]/i
+    click element    xpath=/html/body/div[6]/div/dl[11]/dd/div[3]/i
+    #提交评测
+    click element    xpath=/html/body/div[6]/div/div[1]/a    #提交评测
+    sleep    1s
+    go to    http://172.17.255.228:8080/custody/auth    #开启授权
+    click element    xpath=//*[@id="js_sub"]    #前往存管银行确认授权
+    Wait Until Page Contains Element    xpath=//*[@id="keyboards"]
+    input text    xpath=//*[@id="keyboards"]    ${平安交易密码}    #输入平安银行存管交易密码
+    click element    xpath=//*[@id="queryButton"]    #点击获取验证码
+    Execute JavaScript    window.open('https://my-st1.orangebank.com.cn/corporbank/otp.jsp')
+    ${titles}    get window titles
+    ${title2}    get from list    ${titles}    1
+    ${title1}    get from list    ${titles}    0
+    select window    title=${title2}
+    input text    xpath=//*[@id="cellphone"]    ${手机号}
+    click element    xpath=//*[@id="pageForm"]/input[2]
+    ${sms_code}    get text    xpath=/html/body/table/tbody/tr[2]/td[4]
+    select window    title=${title1}
+    input text    xpath=//*[@id="mobilePwd"]    ${sms_code}
+    click element    xpath=//*[@id="submitButton"]    #确认
+    sleep    5s
+    close all browsers
+
+228-可转让
+    open browser    http://172.17.255.228:8080/user/login    chrome
+    Maximize Browser Window
+    input text    name=loginId    15768142030
+    input text    name=password    aaa12345
+    sleep    6s
+    click Element    xpath=//*[@id="js_login"]/div/form/a
+    sleep    1s
+    go to    http://172.17.255.228:8080/my/investDetail/193633
+    click element    xpath=//*[@id="cdProduct"]/ul/li[2]
+    click element    xpath=//*[@id="transfer"]
+    Wait Until Page Contains Element    xpath=/html/body/div[2]/table/tbody/tr[2]/td[2]/div/table/tbody/tr[2]/td[2]/div/iframe
+    select frame    xpath=/html/body/div[2]/table/tbody/tr[2]/td[2]/div/table/tbody/tr[2]/td[2]/div/iframe
+    input text    id=transferReward    2
+    click element    id=transferSubmitBtn
+    close all browsers
+
+228BE_ 打开跑定时任务页
+    [Setup]    228BE登陆
+    Maximize Browser Window
+    input text    id=loginId    admin
+    input text    id=password    123456
+    click Element    xpath=//*[@id="login-box"]/div/div/fieldset/div[2]/label/span
+    sleep    8s
+    Click Button    id=subButton
+    sleep    1s
+    go to    http://172.17.255.228:7080/task/list
+
+220-每日签到
+    open browser    http://172.17.255.220:8080/user/login    chrome
+    Maximize Browser Window
+    input text    name=loginId    13714705129
+    input text    name=password    aaa12345
+    sleep    6s    #睡眠6秒，手动输入图形验证码
+    click Element    xpath=//*[@id="js_login"]/div/form/a
+    sleep    1s
+    go to    http://172.17.255.220:8080/member/index    #跳转到会员中心
+    click element    xpath=//*[@id="js_task_ul"]/li[1]/div[2]/a
+    close all browsers
+
+220注册账号开通存管
+    open browser    http://172.17.255.220:8080/user/register    chrome
+    Maximize Browser Window
+    ${phonenum}    Set Variable    ${真实手机号}    #因为220要用真实手机号码，所以用这个
+    #${phonenum}    Create Phone    #随机生成11位电话就用这个
+    input text    xpath=/html/body/div[5]/div/div[1]/form/label[1]/input[2]    ${phonenum}    #${phonenum}
+    input text    xpath=/html/body/div[5]/div/div[1]/form/label[2]/input[2]    aaa12345
+    input text    xpath=/html/body/div[5]/div/div[1]/form/label[3]/input    aaa12345
+    sleep    6s
+    # 点击获取验证码
+    click element    xpath=/html/body/div[5]/div/div[1]/form/label[5]/a
+    sleep    1s
+    Connect To Database Using Custom Params    pymysql    database='mtbill',user='root',password='123456',host='172.17.255.220',port=3306,charset='utf8'
+    ${a}    query    SELECT smsParam from sms_record WHERE receiveMobiles=${phonenum} AND smsType=11 ORDER BY createTime DESC;
+    ${b}    Set Variable    ${a[0][0]}
+    ${c}    Evaluate    ${b}['code']
+    input text    xpath=/html/body/div[5]/div/div[1]/form/label[5]/input    ${c}
+    click element    xpath=/html/body/div[5]/div/div[1]/form/div/label[2]/label
+    click element    xpath=/html/body/div[5]/div/div[1]/form/div/a
+    sleep    1s
+    #开通存管
+    go to    http://172.17.255.220:8080/payment/card/authentication
+    input text    xpath=/html/body/div[1]/table/tbody/tr[2]/td[2]/div/table/tbody/tr[2]/td[2]/div/div/div[1]/input    123456    #输入交易密码
+    input text    xpath=/html/body/div[1]/table/tbody/tr[2]/td[2]/div/table/tbody/tr[2]/td[2]/div/div/div[2]/input    123456    #确认交易密码
+    click element    xpath=/html/body/div[1]/table/tbody/tr[2]/td[2]/div/table/tbody/tr[2]/td[2]/div/div/a
+    sleep    4s
+    input text    xpath=//*[@id="js_bind_card"]/div[3]/div[1]/input    李丽书
+    ${sfznum}    makeNew
+    input text    xpath=//*[@id="js_bind_card"]/div[3]/div[2]/input    ${sfznum}
+    ${cardNum}    CardNum Generator
+    input text    xpath=//*[@id="js_bind_card"]/div[3]/div[3]/input    ${cardNum}
+    click element    xpath=//*[@id="js_bind_card"]/div[3]/div[5]/a    #点击免费获取验证码
+    sleep    30s    #等待30s,手动输入真实短信验证码
+    click element    xpath=//*[@id="js_bind_card"]/div[3]/div[6]/a    #下一步
+    sleep    10s    #认证时间
+    input text    xpath=//*[@id="js_tel_code"]    111111
+    click element    xpath=//*[@id="js_custody_div"]/div[3]/div[7]/a    #开通银行存管
+    close all browsers
+
+test
+    Connect To Database Using Custom Params    pymysql    database='mtbill',user='root',password='123456',host='172.17.255.228',port=3306,charset='utf8'
+    ${a}    Set Variable    车贷ZYHn6372H
+    ${result}    query    SELECT id from product WHERE productName="${a}"
+    ${b}    Set Variable    ${result[0][0]}
+    log    ${b}
+
+sms_code
+    Connect To Database Using Custom Params    pymysql    database='mtbill',user='root',password='123456',host='172.17.255.220',port=3306,charset='utf8'
+    ${a}    query    SELECT smsParam from sms_record WHERE receiveMobiles=15768142030 ORDER BY createTime DESC;
+    ${b}    Set Variable    ${a[0][0]}
+    log    ${b}
+    ${c}    Evaluate    ${b}['code']
+    log    ${c}
+
+bill包部署-220环境
+    Open Connection    ${host_ip}    port=22
+    login    root    ${password}    #登录账户和密码
+    #备份之前的环境
+    write    cd /data/
+    write    rm -rf bill_RBK
+    write    cp -r bill bill_RBK    #先备份环境已防万一
+    sleep    2s
+    #备份部署前环境相关配置
+    #get file    /data/bill/WEB-INF/classes/bill_context.xml    f:\\auto_test_220\\bill_context.xml
+    #get file    /data/bill/WEB-INF/classes/bill_context_dependence.xml    f:\\auto_test_220\\bill_context_dependence.xml
+    #get file    /data/bill/WEB-INF/classes/bill_jms.xml    f:\\auto_test_220\\bill_jms.xml
+    #get file    /data/bill/WEB-INF/classes/bill_mvc.xml    f:\\auto_test_220\\bill_mvc.xml
+    #get file    /data/bill/WEB-INF/classes/bill_mvc_dependence.xml    f:\\auto_test_220\\bill_mvc_dependence.xml
+    #get file    /data/bill/WEB-INF/classes/bill_rpc.xml    f:\\auto_test_220\\bill_rpc.xml
+    #get file    /data/bill/WEB-INF/classes/bill_task.xml    f:\\auto_test_220\\bill_task.xml
+    #get file    /data/bill/WEB-INF/classes/logback.xml    f:\\auto_test_220\\logback.xml
+    #Get Directory    /data/bill/WEB-INF/classes/conf    f:\\auto_test_220\\conf
+    write    cd /data/bill/
+    write    rm -rf *
+    sleep    3s
+    put file    F:\\test_packet_220\\bill-web-2.0.0-SNAPSHOT-dev.war    /data/bill
+    sleep    1s
+    write    jar -xvf bill-web-2.0.0-SNAPSHOT-dev.war
+    sleep    5s
+    #还原部署前备份的配置文件
+    put file    f:\\auto_test_220\\bill_context.xml    /data/bill/WEB-INF/classes/bill_context.xml
+    put file    f:\\auto_test_220\\bill_context_dependence.xml    /data/bill/WEB-INF/classes/bill_context_dependence.xml
+    put file    f:\\auto_test_220\\bill_jms.xml    /data/bill/WEB-INF/classes/bill_jms.xml
+    put file    f:\\auto_test_220\\bill_mvc.xml    /data/bill/WEB-INF/classes/bill_mvc.xml
+    put file    f:\\auto_test_220\\bill_mvc_dependence.xml    /data/bill/WEB-INF/classes/bill_mvc_dependence.xml
+    put file    f:\\auto_test_220\\bill_rpc.xml    /data/bill/WEB-INF/classes/bill-be_rpc.xml
+    put file    f:\\auto_test_220\\bill_task.xml    /data/bill/WEB-INF/classes/bill_task.xml
+    put file    f:\\auto_test_220\\logback.xml    /data/bill/WEB-INF/classes/logback.xml
+    Put Directory    f:\\auto_test_220\\conf    /data/bill/WEB-INF/classes/
+    #启动bill服务
+    write    cd /data/script
+    write    ./tomcat_bill_8080.sh stop
+    sleep    1s
+    write    ./tomcat_bill_8080.sh start
+    sleep    45s
+    open browser    http://${host_ip}:8080    chrome
+    Maximize Browser Window
+    log    Test Bill Environment Successd!
+    Close All Connections
+
+activity包更新-220环境
+    Open Connection    ${host_ip}    port=22
+    login    root    ${password}    #登录账户和密码
+    #备份之前的环境
+    write    cd /data/
+    write    rm -rf app-6012-activity_RBK
+    write    cp -r app-6012-activity app-6012-activity_RBK
+    sleep    2s
+    write    cd /data/app-6012-activity
+    sleep    1s
+    write    rm -rf \ lib
+    Put Directory    F:\\activity_220\\mtjf-activities-2.2.0-SNAPSHOT-dev\\lib    /data/app-6012-activity
+    sleep    8s
+    Put file    F:\\activity_220\\mtjf-activities-2.2.0-SNAPSHOT-dev\\bin\\io\\alpha\\container\\spring\\startup\\Startup.class    /data/app-6012-activity/bin/io/alpha/container/spring/startup/Startup.class
+    sleep    1s
+    write    cd /data/script
+    write    ./app-6012-activity.sh stop
+    sleep    10s
+    write    ./app-6012-activity.sh start
+    sleep    5s
+    log    activity packge succed!
+    Close All Connections
+
+be包部署-220环境
+    Open Connection    ${host_ip}    port=22
+    login    root    ${password}    #登录账户和密码
+    #备份之前的环境
+    write    cd /data/
+    write    rm -rf be_RBK
+    write    cp -r be be_RBK    #先备份环境已防万一
+    sleep    2s
+    #备份部署前环境相关配置
+    #get file    /data/be/WEB-INF/classes/bill-be_context.xml    f:\\auto_test_be220\\bill-be_context.xml
+    #get file    /data/be/WEB-INF/classes/bill-be_context_dependence.xml    f:\\auto_test_be220\\bill-be_context_dependence.xml
+    #get file    /data/be/WEB-INF/classes/bill-be_jms.xml    f:\\auto_test_be220\\bill-be_jms.xml
+    #get file    /data/be/WEB-INF/classes/bill-be_mvc.xml    f:\\auto_test_be220\\bill-be_mvc.xml
+    #get file    /data/be/WEB-INF/classes/bill-be_mvc_dependence.xml    f:\\auto_test_be220\\bill-be_mvc_dependence.xml
+    #get file    /data/be/WEB-INF/classes/bill-be_rpc.xml    f:\\auto_test_be220\\bill-be_rpc.xml
+    #get file    /data/be/WEB-INF/classes/logback.xml    f:\\auto_test_be220\\logback.xml
+    #Get Directory    /data/be/WEB-INF/classes/conf    f:\\auto_test_be220\\conf
+    write    cd /data/be/
+    write    rm -rf *
+    sleep    3s
+    put file    F:\\test_packet_be220\\be-web-2.0.0-SNAPSHOT-dev.war    /data/be
+    sleep    1s
+    write    jar -xvf be-web-2.0.0-SNAPSHOT-dev.war
+    sleep    5s
+    #还原部署前备份的配置文件
+    put file    f:\\auto_test_be220\\bill-be_context.xml    /data/be/WEB-INF/classes/bill-be_context.xml
+    put file    f:\\auto_test_be220\\bill-be_context_dependence.xml    /data/be/WEB-INF/classes/bill-be_context_dependence.xml
+    put file    f:\\auto_test_be220\\bill-be_jms.xml    /data/be/WEB-INF/classes/bill-be_jms.xml
+    put file    f:\\auto_test_be220\\bill-be_mvc.xml    /data/be/WEB-INF/classes/bill-be_mvc.xml
+    put file    f:\\auto_test_be220\\bill-be_mvc_dependence.xml    /data/be/WEB-INF/classes/bill-be_mvc_dependence.xml
+    put file    f:\\auto_test_be220\\bill-be_rpc.xml    /data/be/WEB-INF/classes/bill-be_rpc.xml
+    put file    f:\\auto_test_be220\\logback.xml    /data/be/WEB-INF/classes/logback.xml
+    Put Directory    f:\\auto_test_be220\\conf    /data/be/WEB-INF/classes/
+    #启动bill服务
+    write    cd /data/script
+    write    ./tomcat_be_7080.sh stop
+    sleep    1s
+    write    ./tomcat_be_7080.sh start
+    sleep    45s
+    open browser    http://${host_ip}:7080    chrome
+    Maximize Browser Window
+    log    Test Be Environment Successd!
+    Close All Connections
+
+227清Redis缓存
+    Open Connection    ${227_host_ip}    port=22
+    login    root    ${password}    #登录账户和密码
+    write    /app/redis-6380/bin/redis-cli -p 6380
+    write    flushall
+    Close All Connections
+
+*** Keywords ***
+228BE登陆
+    open browser    http://172.17.255.228:7080/login    chrome

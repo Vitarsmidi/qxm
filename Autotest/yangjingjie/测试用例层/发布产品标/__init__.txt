@@ -1,0 +1,14 @@
+*** Settings ***
+Library           Selenium2Library
+Library           ../../library/at.py
+Library           Collections
+Library           random
+Library           DatabaseLibrary
+Library           pymysql
+Library           MySQLdb
+Library           Collections
+Library           string
+Library           AutoItLibrary
+Library           AutoItLibrary
+Library           SSHLibrary
+Resource          ../../公共资源层.txt

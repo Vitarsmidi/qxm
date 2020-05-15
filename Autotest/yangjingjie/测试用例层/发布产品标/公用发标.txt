@@ -1,0 +1,348 @@
+*** Settings ***
+Library           Collections
+Library           MySQLdb
+Library           DatabaseLibrary
+Library           pymysql
+Library           random
+Library           string
+Library           SSHLibrary
+Library           SendKeys
+Resource          ../../公共资源.txt
+
+*** Variables ***
+${首页地址}           http://172.17.255.228:8080/user/login
+${手机号}            13811112223
+${密码}             aaa12345
+${投资金额}           800
+${后台浏览器}          http://172.17.255.228:7080/product/sporadic/list
+${后台用户名}          admin
+${后台密码}           123456
+${还款方式}           2    # 2---先息后本 \ 3-----等额本息
+${转让状态}           1    # 0-------不可转让 \ 1-----------可转让
+${利率}             8
+${期限月}            4
+${可转期限}           1
+${期1应还金额}         1400
+${期2应还金额}         0
+${借款人身份证}         370502198707012526
+${担保人营业证号}        632324NAA00019X
+${加息利率}           4
+
+*** Test Cases ***
+车贷产品发布
+    登录后台    ${后台浏览器}    ${后台用户名}    ${后台密码}
+    打开新增散标
+    ${productname}    生成随机产品名称
+    文本框输入    productName    ${productname}
+    获取合同编号
+    获取担保人合同编号
+    获取还款方式    ${还款方式}
+    Wait Until Element Is Visible    amount
+    文本框输入    amount    ${投资金额}
+    文本框输入    annualRate    ${利率}
+    文本框输入    deadline    ${期限月}
+    文本框输入    addAnnualRate    ${加息利率}
+    获取转让状态    ${转让状态}
+    Wait Until Element Is Visible    transferDeadline
+    文本框输入    transferDeadline    ${可转期限}
+    文本框输入    repayAmountPeriod    ${期1应还金额}
+    文本框输入    repayAmountPeriod2    ${期2应还金额}
+    文本框输入    borrowerName    杨静
+    文本框输入    idCardNo    ${借款人身份证}
+    文本框输入    loanAmount    ${投资金额}
+    文本框输入    guaranteeName    杨静
+    文本框输入    guaranteeLegalPerson    杨静
+    文本框输入    gIdCardNo    ${担保人营业证号}
+    sleep    1s
+    上传附件    C:\\Users\\MTJR-0327\\Desktop\\123.rar
+    保存
+    sleep    1s
+    ${id}    sele_sql    ${productname}
+    Set Global Variable    ${productId}    ${id}    #获取标的ID并设置全局变量
+    审核标的    ${productId}
+    关闭浏览器
+
+登陆投资
+    ${id3}    登录前台    ${首页地址}    ${手机号}    ${密码}    #登录前台并获取浏览器ID
+    输入ID打开标的详情页    ${productId}
+    输入投资金额和交易密码    300    a111111
+    ${code}    获取平安验证码    ${手机号}
+    切换浏览器输入验证码    ${id3}    ${code}
+    输入ID打开标的详情页    ${productId}
+    ${amount}    剩余可投金额
+    输入投资金额和交易密码    ${amount}    a111111
+    ${code}    获取平安验证码    ${手机号}
+    切换浏览器输入验证码    ${id3}    ${code}
+    sleep    4s
+    update_product    ${productId}
+    关闭浏览器
+
+放款
+    登录后台    http://172.17.255.228:7080/task/list    ${后台用户名}    ${后台密码}
+    sleep    1s
+    连接ssh
+    放款任务
+    write    tail -fn 100 be.log
+    ${output}    Read    delay=0.3s
+    log    ${output}    #输出be日志
+    关闭浏览器
+    Close All Connections
+
+还款并更新转让状态
+    update_repay    ${productId}
+    登录后台    http://172.17.255.228:7080/task/list    ${后台用户名}    ${后台密码}
+    连接ssh
+    还款任务
+    sleep    20s
+    更新转让状态任务
+    查询还款时间    ${productId}
+    write    tail -fn 300 be.log
+    ${output}    Read    delay=0.5s
+    log    ${output}
+    关闭浏览器
+    Close All Connections
+
+发起转让
+    ${investid}    获取投资ID    ${productId}
+    登录前台    http://172.17.255.228:8080/my/investDetail/${investid}    ${手机号}    ${密码}
+    发起转让
+    关闭浏览器
+
+取消转让
+    ${investid}    获取投资ID    ${productId}
+    登录前台    http://172.17.255.228:8080/my/investDetail/${investid}    ${手机号}    ${密码}
+    取消转让
+    关闭浏览器
+
+民投抽奖
+    登录前台    http://172.17.255.228:8080/user/login    13711111112    ${密码}
+    ${a}    获取免费抽奖次数
+    输入抽奖次数抽奖    3
+
+注册
+    输入手机号和密码进行注册    13822221119    aaa12345
+    sleep    3s
+    关闭浏览器
+
+开通存管测试
+    Open Browser    http://172.17.255.228:8080/user/login    ff
+    ${phone}    Set Variable    13711113333
+    ${name}    Set Variable    杨怡
+    ${icdcardno}    Set Variable    370502198707013222
+    ${accoutnno}    Set Variable    6226096554302555
+    Maximize Browser Window
+    input text    loginId    ${phone}
+    input text    password    aaa12345
+    sleep    10s
+    Click Element    xpath=//a[@class="btn"]
+    Wait Until Element Is Visible    xpath=//a[@title="会员中心"]
+    Click Element    xpath=/html/body/div[2]/div/div[2]/a
+    Wait Until Element Is Visible    xpath=/html/body/div[1]/table/tbody/tr[2]/td[2]/div/table/tbody/tr[2]/td[2]/div/div/a
+    Click Element    xpath=/html/body/div[1]/table/tbody/tr[2]/td[2]/div/table/tbody/tr[2]/td[2]/div/div/a
+    Wait Until Element Is Visible    xpath=//*[@id="js_sub_btn"]
+    input text    realName    ${name}
+    input text    idCardNo    ${icdcardno}
+    Click Element    xpath=//*[@id="js_sub_btn"]
+    Wait Until Element Is Visible    xpath=//*[@id="keyboards"]
+    input text    accountNo    ${accoutnno}
+    input text    xpath=//*[@id="keyboards"]    a111111
+    input text    xpath=//*[@id="keyboards2"]    a111111
+    sleep    7s
+    click button    queryButton
+    Open Browser    https://my-st1.orangebank.com.cn/corporbank/otp.jsp    chrome    2nd conn
+    Switch Browser    2nd conn
+    Wait Until Element Is Visible    xpath=//*[@id="cellphone"]
+    input text    xpath=//*[@id="cellphone"]    ${phone}
+    Click Element    xpath=//*[@id="pageForm"]/input[2]
+    ${code}    get text    xpath=/html/body/table/tbody/tr[2]/td[4]
+    关闭浏览器
+    Switch Browser    1
+    input text    mobilePwd    ${code}
+    Click Element    xpath=//*[@id="isRead"]
+    Click Element    xpath=//*[@id="SubmitButton"]
+
+切换title
+    Open Browser    https://www.baidu.com/
+    sleep    1s
+    Maximize Browser Window
+    sleep    1s
+    input text    kw    22
+    sleep    1s
+    Click Element    su
+    sleep    8s
+    ${a}    Get Window Titles
+    log    ${a}
+    ${B}    Set Variable    ${a[0]}
+    ${C}    Set Variable    ${a[1]}
+    select window    title=${B}
+    select window    title=${C}
+
+test_sql
+    Connect To Database Using Custom Params    pymysql    database='mtbill', user='root', password='123456', host='172.17.255.228', port=3306
+    ${a}    query    select smsparam from sms_record where receiveMobiles =13711112225 limit 1
+    log    ${a}
+    #    select smsparam from sms_record where receiveMobiles =15013735063 limit 1
+    ${b}    Set Variable    ${a[0][0]}
+    ${d}    evaluate    ${b}
+    log    ${d['code']}
+    ${rand}    evaluate    random.randint(10000,99999)    random
+    log    ${rand}
+    ${proname}    Set Variable    车贷
+    log    ${proname}${rand}
+    Disconnect From Database
+
+test2
+    Connect To Database Using Custom Params    pymysql    database='mtbill', user='root', password='123456', host='172.17.255.228', port=3306,charset='utf8'
+    ${proname1}    Set Variable    70559
+    log    select realrepaydate from product_repay_plan where originalProductId ="${proname1}" and repaystatus=3
+    ${a}    query    select * \ from product_repay_plan where originalProductId ="${proname1}" and repaystatus=3
+    log    ${a}
+    #    log    ${a[0][0]['code']}
+    Disconnect From Database
+
+个人投资
+    ${productId1}    Set Variable    70212
+    Open Browser    http://172.17.255.228:8080/user/login
+    Maximize Browser Window
+    input text    loginId    13711111112
+    input text    password    aaa12345
+    sleep    10s
+    Click Element    xpath=//a[@class="btn"]
+    Wait Until Element Is Visible    xpath=//a[@title="会员中心"]
+    goto    http://172.17.255.228:8080/product/detail/${productId1}
+    Wait Until Element Is Visible    xpath=/html/body/div[6]/div[2]/span[1]/b
+    input text    investAmount    1000
+    Click Element    xpath=/html/body/div[6]/div[2]/a
+    Wait Until Element Is Visible    xpath=/html/body/div[1]/table/tbody/tr[2]/td[2]/div/table/tbody/tr[2]/td[2]/div/div/p/span[1]
+    Click Element    xpath=/html/body/div[1]/table/tbody/tr[2]/td[2]/div/table/tbody/tr[2]/td[2]/div/div/p/span[1]
+    Click Element    xpath=/html/body/div[1]/table/tbody/tr[2]/td[2]/div/table/tbody/tr[2]/td[2]/div/div/p/a[3]
+    Wait Until Element Is Visible    xpath=/html/body/div[5]/div/p/a[2]
+    goto    http://172.17.255.228:8080/product/detail/${productId1}
+    ${a}    Get Text    xpath=/html/body/div[6]/div[2]/span[1]/b
+    log    ${a}
+    ${b}    evaluate    '${a}'.replace(',','')
+    input text    investAmount    ${b}
+    Click Element    xpath=/html/body/div[6]/div[2]/a
+    Wait Until Element Is Visible    xpath=/html/body/div[1]/table/tbody/tr[2]/td[2]/div/table/tbody/tr[2]/td[2]/div/div/p/span[1]
+    Click Element    xpath=/html/body/div[1]/table/tbody/tr[2]/td[2]/div/table/tbody/tr[2]/td[2]/div/div/p/span[1]
+    Click Element    xpath=/html/body/div[1]/table/tbody/tr[2]/td[2]/div/table/tbody/tr[2]/td[2]/div/div/p/a[3]
+    update_product    ${productId1}
+    关闭浏览器
+
+个人还款
+    ${productId1}    Set Variable    70224
+    update_repay    ${productId1}
+    Open Browser    ${后台浏览器}
+    Maximize Browser Window
+    input text    loginId    ${后台用户名}
+    input text    password    ${后台密码}
+    Click Element    xpath=//*[@id='login-box']/div/div/fieldset/div[2]/label/span
+    sleep    7s
+    Click Element    xpath=//button[@id="subButton"]
+    sleep    1s
+    goto    http://172.17.255.228:7080/task/list
+    连接ssh
+    Wait Until Element Is Visible    xpath=//a[@href='/task/trigger/18ee78fa31a6ca344470251c33434ad9a66c9198/desc/6L-Y5qy-5Yiw55So5oi36LWE6YeR6LSm5oi3']
+    Click Element    xpath=//a[@href='/task/trigger/18ee78fa31a6ca344470251c33434ad9a66c9198/desc/6L-Y5qy-5Yiw55So5oi36LWE6YeR6LSm5oi3']
+    sleep    4s
+    Wait Until Element Is Visible    xpath=//a[@href='/task/trigger/aae5d895d761bca2cc3a485563f30049b0289bb8/desc/5oqV6LWE6L2s6K6p54q25oCB57u05oqk']
+    Click Element    xpath=//a[@href='/task/trigger/aae5d895d761bca2cc3a485563f30049b0289bb8/desc/5oqV6LWE6L2s6K6p54q25oCB57u05oqk']
+    write    tail -fn 500 be.log
+    ${output}    Read    delay=0.5s
+    log    ${output}
+    查询还款时间    ${productId1}
+    关闭浏览器
+    Close All Connections
+
+切换浏览器
+    Open Browser    https://www.baidu.com/    ff
+    Open Browser    https://www.baidu.com/    chrome    2nd conn
+    Switch Browser    1
+    goto    https://my-st1.orangebank.com.cn/corporbank/otp.jsp
+    Switch Browser    2nd conn
+    关闭浏览器
+
+SSH练习
+    Open Connection    172.17.255.228
+    login    root    grmtjr@2016
+    write    cd /data/app/logs
+    write    ll
+    ${output}    Read    delay=1s
+    log    ${output}
+    Close All Connections
+
+投资练习
+    ${productId1}    Set Variable    70242
+    Open Browser    http://172.17.255.228:8080/user/login    chrome
+    Maximize Browser Window
+    input text    loginId    13711111116
+    input text    password    aaa12345
+    sleep    10s
+    Click Element    xpath=//a[@class="btn"]
+    Wait Until Element Is Visible    xpath=//a[@title="会员中心"]
+    goto    http://172.17.255.228:8080/product/detail/${productId1}
+    Wait Until Element Is Visible    xpath=/html/body/div[6]/div[2]/span[1]/b
+    input text    investAmount    100
+    Click Element    xpath=/html/body/div[6]/div[2]/a
+    Wait Until Element Is Visible    xpath=/html/body/div[1]/table/tbody/tr[2]/td[2]/div/table/tbody/tr[2]/td[2]/div/div/p/span[1]
+    Click Element    xpath=/html/body/div[1]/table/tbody/tr[2]/td[2]/div/table/tbody/tr[2]/td[2]/div/div/p/span[1]
+    Click Element    xpath=/html/body/div[1]/table/tbody/tr[2]/td[2]/div/table/tbody/tr[2]/td[2]/div/div/p/a[3]
+    Wait Until Element Is Visible    //*[@id="queryButton"]
+    Click Element    //*[@id="queryButton"]
+    input text    xpath=//*[@id="keyboards"]    a111111
+    sleep    1s
+    Execute Javascript    window.open("https://my-st1.orangebank.com.cn/corporbank/otp.jsp")
+    ${a}    Get Window Titles
+    log    ${a}
+    ${B}    Set Variable    ${a[0]}
+    ${C}    Set Variable    ${a[1]}
+    select window    title=${C}
+    Wait Until Element Is Visible    xpath=//*[@id="cellphone"]
+    input text    xpath=//*[@id="cellphone"]    13711111116
+    Click Element    xpath=//*[@id="pageForm"]/input[2]
+    ${code}    get text    xpath=/html/body/table/tbody/tr[2]/td[4]
+    select window    title=${B}
+    Wait Until Element Is Visible    xpath=//*[@id="submitButton"]
+    input text    mobilePwd    ${code}
+    Click Element    xpath=//*[@id="submitButton"]
+    Wait Until Element Is Visible    xpath=//div[@class='resultBtn' and @onclick='doReturn();']    40    error
+    Click Element    xpath=//div[@class='resultBtn' and @onclick='doReturn();']
+    sleep    3s
+    goto    http://172.17.255.228:8080/product/detail/${productId1}
+    ${a}    Get Text    xpath=/html/body/div[6]/div[2]/span[1]/b
+    log    ${a}
+    ${b}    evaluate    '${a}'.replace(',','')
+    input text    investAmount    ${b}
+    Click Element    xpath=/html/body/div[6]/div[2]/a
+    Wait Until Element Is Visible    xpath=/html/body/div[1]/table/tbody/tr[2]/td[2]/div/table/tbody/tr[2]/td[2]/div/div/p/span[1]
+    Click Element    xpath=/html/body/div[1]/table/tbody/tr[2]/td[2]/div/table/tbody/tr[2]/td[2]/div/div/p/span[1]
+    Click Element    xpath=/html/body/div[1]/table/tbody/tr[2]/td[2]/div/table/tbody/tr[2]/td[2]/div/div/p/a[3]
+    Wait Until Element Is Visible    //*[@id="queryButton"]
+    Click Element    //*[@id="queryButton"]
+    input text    xpath=//*[@id="keyboards"]    a111111
+    sleep    1s
+    Execute Javascript    window.open("https://my-st1.orangebank.com.cn/corporbank/otp.jsp")
+    ${a}    Get Window Titles
+    log    ${a}
+    ${B}    Set Variable    ${a[0]}
+    ${C}    Set Variable    ${a[1]}
+    select window    title=${C}
+    Wait Until Element Is Visible    xpath=//*[@id="cellphone"]
+    input text    xpath=//*[@id="cellphone"]    13711111116
+    Click Element    xpath=//*[@id="pageForm"]/input[2]
+    ${code}    get text    xpath=/html/body/table/tbody/tr[2]/td[4]
+    select window    title=${B}
+    Wait Until Element Is Visible    xpath=//*[@id="submitButton"]
+    input text    mobilePwd    ${code}
+    Click Element    xpath=//*[@id="submitButton"]
+    Wait Until Element Is Visible    xpath=//div[@class='resultBtn' and @onclick='doReturn();']    40    error
+    Click Element    xpath=//div[@class='resultBtn' and @onclick='doReturn();']
+    sleep    4s
+    update_product    ${productId1}
+    关闭浏览器
+
+33
+    ${investid}    获取投资ID    ${productId}
+    登录前台    http://172.17.255.228:8080/my/investDetail/${investid}    ${手机号}    ${密码}
+    发起转让
+    关闭浏览器
