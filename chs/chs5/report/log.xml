@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite errors="1" failures="1" hostname="SC-202003291557" name="pytest" skipped="0" tests="1" time="10.706" timestamp="2020-05-08T22:54:11.874873"><testcase classname="test_baidu3.TestBaidu" file="test_baidu3.py" line="32" name="test1" time="10.416"><failure message="AttributeError: &apos;TestBaidu&apos; object has no attribute &apos;driver&apos;">cls = &lt;chs5.test_baidu3.TestBaidu object at 0x000002A2E6840160&gt;
+
+    def test1(cls):
+&gt;       cls.driver.get(&quot;https://www.baidu.com&quot;)
+E       AttributeError: &apos;TestBaidu&apos; object has no attribute &apos;driver&apos;
+
+test_baidu3.py:34: AttributeError</failure></testcase><testcase classname="test_baidu3.TestBaidu" file="test_baidu3.py" line="32" name="test1" time="0.001"><error message="test teardown failure">self = &lt;class &apos;chs5.test_baidu3.TestBaidu&apos;&gt;
+
+    @classmethod
+    def teardown_class(self):
+&gt;       self.driver.quit()
+E       AttributeError: type object &apos;TestBaidu&apos; has no attribute &apos;driver&apos;
+
+test_baidu3.py:44: AttributeError</error></testcase></testsuite></testsuites>

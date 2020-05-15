@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite errors="1" failures="1" hostname="SC-202003291557" name="pytest" skipped="0" tests="2" time="81.518" timestamp="2020-05-12T10:31:14.031434"><testcase classname="test_dir.test_baidu.TestSearch" file="test_dir\test_baidu.py" line="51" name="test_baidu_search_case[1-Selenium]" time="71.905"><failure message="poium.common.exceptions.PageElementError: Message: Can&apos;t set value, element not found">self = &lt;chs5.test_dir.test_baidu.TestSearch object at 0x00000269E45D3B38&gt;
+name = 1, search_key = &apos;Selenium&apos;
+browser = &lt;selenium.webdriver.chrome.webdriver.WebDriver (session=&quot;d14b8fb514c56ff8d19372d24aeaea39&quot;)&gt;
+base_url = &apos;https://www.baidu.com&apos;
+
+    def test_baidu_search_case(self, name,search_key,browser, base_url):
+        &quot;&quot;&quot;
+       调用conftest.py中的 base_url()、browser()钩子函数
+    
+        名称：百度搜索&quot;pytest&quot;
+        步骤：
+        1、打开浏览器
+        2、输入&quot;pytest&quot;关键字
+        3、点击搜索按钮
+        检查点：
+        * 检查页面标题是否包含关键字。
+        &quot;&quot;&quot;
+        page = BaiduPage(browser) #调用BaiduPage类，传入browser驱动
+        page.get(base_url)
+        page.search_input = search_key
+        page.search_button.click()
+&gt;       page.search_input2 = search_key
+
+test_dir\test_baidu.py:68: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = &lt;poium.page_objects.PageElement object at 0x00000269E3C98AC8&gt;
+instance = &lt;chs.chs5.page.baidu_page.BaiduPage object at 0x00000269E45CDB38&gt;
+value = &apos;Selenium&apos;
+
+    def __set__(self, instance, value):
+        if self.has_context:
+            raise PageElementError(&quot;Sorry, the set descriptor doesn&apos;t support elements with context.&quot;)
+        elem = self.__get__(instance, instance.__class__)
+        if not elem:
+&gt;           raise PageElementError(&quot;Can&apos;t set value, element not found&quot;)
+E           poium.common.exceptions.PageElementError: Message: Can&apos;t set value, element not found
+
+..\..\..\..\Python\Python37\lib\site-packages\poium\page_objects.py:157: PageElementError</failure></testcase><testcase classname="pytest" name="internal" time="0.000"><error message="internal error">Traceback (most recent call last):
+  File &quot;G:\Program Files\Python\Python37\lib\site-packages\_pytest\main.py&quot;, line 191, in wrap_session
+    session.exitstatus = doit(config, session) or 0
+  File &quot;G:\Program Files\Python\Python37\lib\site-packages\_pytest\main.py&quot;, line 235, in _main
+    config.hook.pytest_runtestloop(session=session)
+  File &quot;G:\Program Files\Python\Python37\lib\site-packages\pluggy\hooks.py&quot;, line 286, in __call__
+    return self._hookexec(self, self.get_hookimpls(), kwargs)
+  File &quot;G:\Program Files\Python\Python37\lib\site-packages\pluggy\manager.py&quot;, line 93, in _hookexec
+    return self._inner_hookexec(hook, methods, kwargs)
+  File &quot;G:\Program Files\Python\Python37\lib\site-packages\pluggy\manager.py&quot;, line 87, in &lt;lambda&gt;
+    firstresult=hook.spec.opts.get(&quot;firstresult&quot;) if hook.spec else False,
+  File &quot;G:\Program Files\Python\Python37\lib\site-packages\pluggy\callers.py&quot;, line 208, in _multicall
+    return outcome.get_result()
+  File &quot;G:\Program Files\Python\Python37\lib\site-packages\pluggy\callers.py&quot;, line 80, in get_result
+    raise ex[1].with_traceback(ex[2])
+  File &quot;G:\Program Files\Python\Python37\lib\site-packages\pluggy\callers.py&quot;, line 187, in _multicall
+    res = hook_impl.function(*args)
+  File &quot;G:\Program Files\Python\Python37\lib\site-packages\_pytest\main.py&quot;, line 256, in pytest_runtestloop
+    item.config.hook.pytest_runtest_protocol(item=item, nextitem=nextitem)
+  File &quot;G:\Program Files\Python\Python37\lib\site-packages\pluggy\hooks.py&quot;, line 286, in __call__
+    return self._hookexec(self, self.get_hookimpls(), kwargs)
+  File &quot;G:\Program Files\Python\Python37\lib\site-packages\pluggy\manager.py&quot;, line 93, in _hookexec
+    return self._inner_hookexec(hook, methods, kwargs)
+  File &quot;G:\Program Files\Python\Python37\lib\site-packages\pluggy\manager.py&quot;, line 87, in &lt;lambda&gt;
+    firstresult=hook.spec.opts.get(&quot;firstresult&quot;) if hook.spec else False,
+  File &quot;G:\Program Files\Python\Python37\lib\site-packages\pluggy\callers.py&quot;, line 208, in _multicall
+    return outcome.get_result()
+  File &quot;G:\Program Files\Python\Python37\lib\site-packages\pluggy\callers.py&quot;, line 80, in get_result
+    raise ex[1].with_traceback(ex[2])
+  File &quot;G:\Program Files\Python\Python37\lib\site-packages\pluggy\callers.py&quot;, line 187, in _multicall
+    res = hook_impl.function(*args)
+  File &quot;g:\program files\python\python37\lib\site-packages\pytest_rerunfailures.py&quot;, line 176, in pytest_runtest_protocol
+    reports = runtestprotocol(item, nextitem=nextitem, log=False)
+  File &quot;G:\Program Files\Python\Python37\lib\site-packages\_pytest\runner.py&quot;, line 95, in runtestprotocol
+    reports.append(call_and_report(item, &quot;call&quot;, log))
+  File &quot;G:\Program Files\Python\Python37\lib\site-packages\_pytest\runner.py&quot;, line 178, in call_and_report
+    report = hook.pytest_runtest_makereport(item=item, call=call)
+  File &quot;G:\Program Files\Python\Python37\lib\site-packages\pluggy\hooks.py&quot;, line 286, in __call__
+    return self._hookexec(self, self.get_hookimpls(), kwargs)
+  File &quot;G:\Program Files\Python\Python37\lib\site-packages\pluggy\manager.py&quot;, line 93, in _hookexec
+    return self._inner_hookexec(hook, methods, kwargs)
+  File &quot;G:\Program Files\Python\Python37\lib\site-packages\pluggy\manager.py&quot;, line 87, in &lt;lambda&gt;
+    firstresult=hook.spec.opts.get(&quot;firstresult&quot;) if hook.spec else False,
+  File &quot;G:\Program Files\Python\Python37\lib\site-packages\pluggy\callers.py&quot;, line 203, in _multicall
+    gen.send(outcome)
+  File &quot;G:\Program Files\PycharmProjects\qxm\chs\chs5\conftest.py&quot;, line 86, in pytest_runtest_makereport
+    capture_screenshots(case_name)
+  File &quot;G:\Program Files\PycharmProjects\qxm\chs\chs5\conftest.py&quot;, line 133, in capture_screenshots
+    driver.save_screenshot(image_dir)
+  File &quot;G:\Program Files\Python\Python37\lib\site-packages\selenium\webdriver\remote\webdriver.py&quot;, line 1055, in save_screenshot
+    return self.get_screenshot_as_file(filename)
+  File &quot;G:\Program Files\Python\Python37\lib\site-packages\selenium\webdriver\remote\webdriver.py&quot;, line 1032, in get_screenshot_as_file
+    png = self.get_screenshot_as_png()
+  File &quot;G:\Program Files\Python\Python37\lib\site-packages\selenium\webdriver\remote\webdriver.py&quot;, line 1064, in get_screenshot_as_png
+    return base64.b64decode(self.get_screenshot_as_base64().encode(&apos;ascii&apos;))
+  File &quot;G:\Program Files\Python\Python37\lib\site-packages\selenium\webdriver\remote\webdriver.py&quot;, line 1074, in get_screenshot_as_base64
+    return self.execute(Command.SCREENSHOT)[&apos;value&apos;]
+  File &quot;G:\Program Files\Python\Python37\lib\site-packages\selenium\webdriver\remote\webdriver.py&quot;, line 321, in execute
+    self.error_handler.check_response(response)
+  File &quot;G:\Program Files\Python\Python37\lib\site-packages\selenium\webdriver\remote\errorhandler.py&quot;, line 242, in check_response
+    raise exception_class(message, screen, stacktrace)
+selenium.common.exceptions.NoSuchWindowException: Message: no such window: target window already closed
+from unknown error: web view not found
+  (Session info: chrome=80.0.3987.162)
+  (Driver info: chromedriver=2.37.544315 (730aa6a5fdba159ac9f4c1e8cbc59bf1b5ce12b7),platform=Windows NT 10.0.16299 x86_64)</error></testcase></testsuite></testsuites>
